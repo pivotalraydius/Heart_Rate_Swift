@@ -35,8 +35,10 @@ class InterfaceController: WKInterfaceController, HKWorkoutSessionDelegate {
         
         guard HKHealthStore.isHealthDataAvailable() == true else {
             label.setText("not available")
+            print("HealthStore data is not available");
             return
         }
+        print("HealthStore data is available");
     
         guard let quantityType = HKQuantityType.quantityTypeForIdentifier(HKQuantityTypeIdentifierHeartRate) else {
             displayNotAllowed()
@@ -47,20 +49,24 @@ class InterfaceController: WKInterfaceController, HKWorkoutSessionDelegate {
         healthStore.requestAuthorizationToShareTypes(nil, readTypes: dataTypes) { (success, error) -> Void in
             if success == false {
                 self.displayNotAllowed()
+                print("Authorizatin allowed");
             }
         }
     }
     
     func displayNotAllowed() {
         label.setText("not allowed")
+        print("Authorization not allowed");
     }
     
     func workoutSession(workoutSession: HKWorkoutSession, didChangeToState toState: HKWorkoutSessionState, fromState: HKWorkoutSessionState, date: NSDate) {
         switch toState {
         case .Running:
             workoutDidStart(date)
+            print("Workout State : Running. Workout Start");
         case .Ended:
             workoutDidEnd(date)
+            print("Workout State : Ended. Workout End");
         default:
             print("Unexpected state \(toState)")
         }
@@ -89,6 +95,7 @@ class InterfaceController: WKInterfaceController, HKWorkoutSessionDelegate {
     
     // MARK: - Actions
     @IBAction func startBtnTapped() {
+        print("Start workout Session \(workoutSession)")
         healthStore.startWorkoutSession(workoutSession)
     }
     
@@ -101,20 +108,27 @@ class InterfaceController: WKInterfaceController, HKWorkoutSessionDelegate {
         // let predicate = HKQuery.predicateForSamplesWithStartDate(workoutStartDate, endDate: nil, options: HKQueryOptions.None)
         
         var anchorValue = Int(HKAnchoredObjectQueryNoAnchor)
+        print("*****AmchorValue from NoAnchor \(anchorValue)")
+        print("*****Amchor \(anchor)")
         if anchor != 0 {
             anchorValue = anchor
         }
         
         guard let quantityType = HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierHeartRate) else { return nil }
         
+        
         let heartRateQuery = HKAnchoredObjectQuery(type: quantityType, predicate: nil, anchor: anchorValue, limit: 0) { (query, sampleObjects, deletedObjects, newAnchor, error) -> Void in
             
             self.anchor = anchorValue
+            print("*****Received Anchored Obj : \(anchorValue)")
             self.updateHeartRate(sampleObjects)
         }
         
+        //print("Heart Rate Samples : \(heartRateSamples)")
+        
         heartRateQuery.updateHandler = {(query, samples, deleteObjects, newAnchor, error) -> Void in
             self.anchor = newAnchor
+            print("*****Update Handler : \(newAnchor)")
             self.updateHeartRate(samples)
         }
         return heartRateQuery
@@ -123,9 +137,14 @@ class InterfaceController: WKInterfaceController, HKWorkoutSessionDelegate {
     func updateHeartRate(samples: [HKSample]?) {
         guard let heartRateSamples = samples as? [HKQuantitySample] else {return}
         
+        print("Update Heart Rate")
+        //print("Heart Rate Samples : \(heartRateSamples)")
+        
         dispatch_async(dispatch_get_main_queue()) {
             guard let sample = heartRateSamples.first else{return}
             let value = sample.quantity.doubleValueForUnit(self.heartRateUnit)
+            print("Qty from first object of sample : \(value)")
+            
             self.label.setText(String(UInt16(value)))
             
             // retrieve source from sample
