@@ -108,8 +108,8 @@ class InterfaceController: WKInterfaceController, HKWorkoutSessionDelegate {
         // let predicate = HKQuery.predicateForSamplesWithStartDate(workoutStartDate, endDate: nil, options: HKQueryOptions.None)
         
         var anchorValue = Int(HKAnchoredObjectQueryNoAnchor)
-        print("*****AmchorValue from NoAnchor \(anchorValue)")
-        print("*****Amchor \(anchor)")
+        print("*****AnchorValue from NoAnchor \(anchorValue)")
+        print("*****Anchor \(anchor)")
         if anchor != 0 {
             anchorValue = anchor
         }
